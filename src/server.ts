@@ -21,7 +21,7 @@ dotenv.config();
  */
 async function initializeAndStartServer() {
   // Init the db connection
-  await initializeDatabaseConnection(process.env.DATABASE_URL || '');
+  await initializeDatabaseConnection();
 
   // // Create and start the Express app
   const app = await createApp();

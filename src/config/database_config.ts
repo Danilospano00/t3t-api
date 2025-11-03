@@ -95,24 +95,23 @@ const databaseConfig: DatabaseConfig = {
  * Database Initialization
  * Initializes the Sequelize instance and connects to the database.
  */
-let sequelize: Sequelize;
+const env = (process.env.NODE_ENV || 'development') as keyof DatabaseConfig;
+const dbConfig: DatabaseConfigEnv = databaseConfig[env];
 
-const initializeDatabaseConnection = async (databaseUrl: string) => {
-  const env = (process.env.NODE_ENV || 'development') as keyof DatabaseConfig;
-  const dbConfig: DatabaseConfigEnv = databaseConfig[env];
+const sequelize = new Sequelize(
+  dbConfig.database ?? '',
+  dbConfig.username ?? '',
+  dbConfig.password ?? '',
+  {
+    host: dbConfig.host,
+    port: dbConfig.port,
+    dialect: dbConfig.dialect,
+    dialectOptions: dbConfig.dialectOptions,
+    models: [],
+  },
+);
 
-  sequelize = new Sequelize(
-    dbConfig.database ?? '',
-    dbConfig.username ?? '',
-    dbConfig.password ?? '',
-    {
-      host: dbConfig.host,
-      port: dbConfig.port,
-      dialect: dbConfig.dialect,
-      dialectOptions: dbConfig.dialectOptions,
-      models: [],
-    },
-  );
+const initializeDatabaseConnection = async () => {
 
   try {
     await sequelize.authenticate();
@@ -150,13 +149,13 @@ async function applyPendingMigrations() {
     // Apply all pending migrations
     const migrations = await umzug.up();
     if (migrations.length === 0) {
-      console.log('ðŸ’¾  No pending migrations');
+      console.log('💾  No pending migrations');
     } else {
-      console.log(`ðŸ’¾  ${migrations.length} migration(s) applied:`);
+      console.log(`💾  ${migrations.length} migration(s) applied:`);
       migrations.forEach((m) => console.log(`  - ${m.name}`));
     }
   } catch (err) {
-    console.log('ðŸ’¾  Error during migrations:', err);
+    console.log('💾  Error during migrations:', err);
     process.exit(1);
   }
 }
