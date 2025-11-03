@@ -1,0 +1,40 @@
+services:
+  db:
+    container_name: t3t_db
+    env_file:
+      - .env
+    image: postgres:17
+    networks:
+      - app_net
+    ports:
+      - 5432:5432
+    volumes:
+      - db_volume:/var/lib/postgresql/data
+    restart: unless-stopped
+  
+  app:
+    command: sh -c "npm install && npm run dev"
+    container_name: t3t_app
+    depends_on:
+      - db
+    env_file:
+      - .env
+    image: node:lts-alpine
+    networks:
+      - app_net
+    ports:
+      - "3000:3000"
+      - "9229:9229"
+    volumes:
+      - ./src:/app
+      - /app/node_modules
+      - ./dist:/dist
+    working_dir: /app
+
+networks:
+  app_net:
+    name: t3t_net
+
+volumes:
+  db_volume:
+    name: t3t_db_data

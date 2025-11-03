@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "dev",
+			"path": "src",
+			"group": "rebuild",
+			"problemMatcher": [],
+			"label": "npm: dev - src",
+			"detail": "nodemon --watch . --ext ts --inspect=0.0.0.0:9229 --exec tsx server.ts"
+		}
+	]
+}
