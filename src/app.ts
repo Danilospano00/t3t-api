@@ -6,6 +6,9 @@ import RegisterSchema from './models/user';
 import User from './models/seq.user';
 import TestSchema from './models/test/test';
 import Test from './models/test/seq.test';
+import bcrypt from 'bcrypt';
+import { verifyToken } from './middlewares/auth_middleware';
+import jwt from 'jsonwebtoken';
 
 export async function createApp(): Promise<Application> {
   const app = express();
@@ -55,7 +58,9 @@ export async function createApp(): Promise<Application> {
         const newObj = await User.create(parsedModel.data);
 
         console.log('User inserted with ID:', newObj);
-        res.status(201).json({ message: 'User registered successfully' });
+        res
+          .status(201)
+          .json({ message: 'User registered successfully', newObj });
       } catch (error) {
         console.error('Error inserting user into database:', error);
         res.status(500).json({ error: 'Internal server error' });
@@ -66,6 +71,58 @@ export async function createApp(): Promise<Application> {
         error: 'Invalid registration data',
         details: parsedModel.error,
       });
+    }
+  });
+
+  app.post('/login', async (_req, res) => {
+    const { username, password } = _req.body;
+
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ message: 'Username and password are required' });
+    }
+
+    try {
+      const user = await User.findOne({ where: { username } });
+
+      if (!user?.dataValues) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+      const isPasswordValid = bcrypt.compareSync(
+        password,
+        user.dataValues.password,
+      );
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+
+      const generatedJwt = jwt.sign(
+        {
+          firstName: user.dataValues.first_name,
+          lastName: user.dataValues.last_name,
+          userId: user.dataValues.id,
+        },
+        process.env.JWT_SECRET!,
+        { expiresIn: '365d' },
+      );
+      res
+        .status(200)
+        .json({ message: 'Login successful', token: generatedJwt, user: user });
+    } catch (error) {
+      console.error('Error during login:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.get('/user/:id', async (_req, res) => {
+    verifyToken(_req, res, async () => {});
+
+    try {
+      const user = await User.findByPk(_req.params.id);
+      res.status(200).json({ user });
+    } catch (error) {
+      return res.status(404).json({ message: 'User not found' });
     }
   });
 

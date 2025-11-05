@@ -5,15 +5,15 @@ import { sequelize } from '../config/database_config';
 // Sync the model with the database (creates table if it doesn't exist)
 class User extends Model {
   public id!: string;
+  public username!: string;
+  public email!: string;
+  public password!: string;
+  public role!: 'admin' | 'user';
+  public is_active!: boolean;
+  public jwt_token_version!: number;
+  public first_name!: string;
+  public last_name!: string;
 
-  public active!: boolean;
-  public apple_provider_id?: string | null;
-  public availability?: [string] | null;
-  public bio?: string | null;
-  public birthdate?: Date | null;
-
-  public categories?: [string] | null;
-  public city_id?: number | null;
 }
 
 User.init(
