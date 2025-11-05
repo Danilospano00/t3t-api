@@ -115,9 +115,7 @@ export async function createApp(): Promise<Application> {
     }
   });
 
-  app.get('/user/:id', async (_req, res) => {
-    verifyToken(_req, res, async () => {});
-
+  app.get('/user/:id', verifyToken, async (_req, res) => {
     try {
       const user = await User.findByPk(_req.params.id);
       res.status(200).json({ user });
