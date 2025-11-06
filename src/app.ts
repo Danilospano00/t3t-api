@@ -99,8 +99,7 @@ export async function createApp(): Promise<Application> {
 
       const generatedJwt = jwt.sign(
         {
-          firstName: user.dataValues.first_name,
-          lastName: user.dataValues.last_name,
+          jwt_token_version: user.dataValues.jwt_token_version,
           userId: user.dataValues.id,
         },
         process.env.JWT_SECRET!,
@@ -121,6 +120,30 @@ export async function createApp(): Promise<Application> {
       res.status(200).json({ user });
     } catch (error) {
       return res.status(404).json({ message: 'User not found' });
+    }
+  });
+
+  app.post('/update-password', verifyToken, async (_req, res) => {
+    const { newPassword } = _req.body;
+
+    try {
+      const user = await User.findByPk((_req as any).userId); 
+
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      user.dataValues.password = newPassword;
+      user.dataValues.jwt_token_version = _req?.body.jwtTokenVersion || '0';
+      await user.save();
+
+      res.status(200).json({
+        message: 'Password updated successfully',
+        user,
+      });
+    } catch (error) {
+      console.error('Error updating password:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
